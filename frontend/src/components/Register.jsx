@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-const REGISTER_ENDPOINT = import.meta.env.VITE_REGISTER_API_URL ?? "/api/register"
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? ""
+const REGISTER_ENDPOINT = `${API_BASE_URL}/api/auth/register`
 
 function Register() {
   const [form, setForm] = useState({
