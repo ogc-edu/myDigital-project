@@ -6,7 +6,7 @@ CREATE TABLE users (
                        username VARCHAR(100) UNIQUE NOT NULL,
                        zip_root VARCHAR(255),
                        image_root VARCHAR(255),
-                       created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+                       createdAt TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 2. Create the ZIPS table
@@ -17,7 +17,7 @@ CREATE TABLE zips (
                       zip_name VARCHAR(255) NOT NULL,
                       status VARCHAR(50) DEFAULT 'pending', -- e.g., pending, processing, completed
                       total_files INTEGER DEFAULT 0,
-                      created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+                      createdAt TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 3. Create the IMAGES table
@@ -27,7 +27,7 @@ CREATE TABLE images (
                         user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
                         zip_id UUID REFERENCES zips(id) ON DELETE SET NULL, -- Nullable if images are uploaded outside a zip
                         public_id TEXT NOT NULL, -- The Cloudinary Public ID
-                        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+                        createdAt TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Indexing for Performance

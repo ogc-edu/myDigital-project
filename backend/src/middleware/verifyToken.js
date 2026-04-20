@@ -6,14 +6,18 @@ export const verifyToken = (req, res, next) => {
 
   if (!token) return res.status(401).json({ message: 'Unauthorized' }); //no token
 
-  try {
-    //verify token
+  try { //verify token
     const legitData = jwt.verify(token, process.env.JWT_SECRET); //extracted from JWT
     req.user = legitData;
     next();
-  } catch (error) {
-    //verification of token failed
+  } catch (error) { //verification of token failed
     res.status(403).json({ message: 'Invalid Token' });
   }
 };
 
+/*
+{
+ id: user.id,
+  username: user.username,
+}
+ */
