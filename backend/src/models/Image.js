@@ -22,32 +22,49 @@ const Image = sequelize.define(
         key: 'id',
       },
     },
-    zip_id: {
-      type: DataTypes.UUID,
-      allowNull: true,
-      references: {
-        model: 'zips',
-        key: 'id',
-      },
-    },
     image_url: {
       type: DataTypes.STRING,
       allowNull: false,
+      validate: {
+        isUrl: true,
+      },
     },
     public_id: { //image name
       type: DataTypes.STRING,
       allowNull: false,
       defaultValue: 'default_image',
+      set(value) {
+        this.setDataValue('public_id', value.trim());
+      },
     },
     image_type:{
       type: DataTypes.STRING,
       allowNull: false,
+      set(value) {
+        this.setDataValue('image_type', value.trim().toLowerCase());
+      },
     },
-    image_size:{
+    image_name:{
+      type: DataTypes.STRING,
+      allowNull: false,
+      set(value) {
+        this.setDataValue('image_name', value.trim());
+      },
+    },
+    image_width:{
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
+    image_length:{
       type: DataTypes.INTEGER,
       allowNull: false,
     },
     createdAt: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW,
+    },
+    updatedAt: {
       type: DataTypes.DATE,
       allowNull: false,
       defaultValue: DataTypes.NOW,

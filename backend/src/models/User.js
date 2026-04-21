@@ -24,6 +24,9 @@ const User = sequelize.define('User', {
     type: DataTypes.STRING,
     allowNull: false,
     unique: true,
+    set(value) {
+      this.setDataValue('email', value.trim().toLowerCase());     //trim to prevent whitespace sql
+    },
     validate: {
       isEmail: true,  //validator includes email validator
     },
@@ -36,6 +39,12 @@ const User = sequelize.define('User', {
     type: DataTypes.STRING,
     allowNull: false,
     unique: true,
+    set(value) {
+      this.setDataValue('username', value.trim());
+    },
+    validate: {
+      len: [3, 30],
+    },
   },
   zip_root: {
     type: DataTypes.STRING,

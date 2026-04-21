@@ -1,13 +1,10 @@
-/**
- * Middleware to handle errors from Cloudinary and Multer.
- * This should be used after routes that involve file uploads.
+/*
+2 error handlers:
+1. Cloudinary error handler -> catch from cloudinary & multer
+2. Global error handler -> catch from all routes
  */
 export const cloudinaryErrorHandler = (err, req, res, next) => {
   if (err) {
-    // Check if error is from Multer or Cloudinary
-    // multer-storage-cloudinary errors usually come through as standard Error objects
-    // with some Cloudinary-specific info if available.
-    
     console.error('Cloudinary/Multer Error:', err);
 
     if (err.name === 'MulterError') {
@@ -18,17 +15,15 @@ export const cloudinaryErrorHandler = (err, req, res, next) => {
       });
     }
 
-    // Cloudinary errors often have a 'http_code' or 'status' or are just passed from the SDK
-    const statusCode = err.http_code || err.status || 400; // default to 400 for user-caused upload errors
-    if (err.http_code || err.message?.toLowerCase().includes('cloudinary') || err.message?.toLowerCase().includes('format')) {
+    const statusCode = err.http_code || err.status || 400; //use 400 if error is from user
+    if (err.http_code || err.message?.toLowerCase().includes('cloudinary')) {
       return res.status(statusCode).json({
         error: 'Cloudinary storage error',
         message: err.message || 'Error uploading to Cloudinary'
       });
     }
 
-    // Generic error fallback for this middleware
-    return res.status(500).json({
+    return res.status(500).json({ //return error like global error handler
       error: 'Upload service failed',
       message: err.message || 'Internal server error'
     });
@@ -36,15 +31,12 @@ export const cloudinaryErrorHandler = (err, req, res, next) => {
   next();
 };
 
-/**
- * Global application error handler.
- */
 export const globalErrorHandler = (err, req, res, next) => {
   console.error('Global Error Handler:', err.stack);
   
   const statusCode = err.statusCode || 500;
   res.status(statusCode).json({
     error: 'Internal Server Error',
-    message: err.message || 'Something went wrong on the server'
+    message: err.message || 'Server error occurred'
   });
 };

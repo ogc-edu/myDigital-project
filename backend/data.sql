@@ -8,19 +8,13 @@ CREATE TABLE users (
                        createdAt TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE zips (
-                      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-                      user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-                      zip_name VARCHAR(255) NOT NULL,
-                      status VARCHAR(50) DEFAULT 'pending', -- e.g., pending, processing, completed
-                      total_files INTEGER DEFAULT 0,
-                      createdAt TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-);
-
 CREATE TABLE images (
                         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                         user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-                        zip_id UUID REFERENCES zips(id) ON DELETE SET NULL, -- Nullable if images are uploaded outside a zip
-                        public_id TEXT NOT NULL, -- The Cloudinary Public ID
+                        width INTEGER NOT NULL,
+                        height INTEGER NOT NULL,
+                        image_type VARCHAR(255) NOT NULL,
+                        public_id TEXT NOT NULL,
+                        image_url TEXT NOT NULL,
                         createdAt TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
