@@ -1,8 +1,17 @@
 import { useState } from "react"
 import { useNavigate, Link } from "react-router-dom"
+import Cookies from "js-cookie"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 
 function Login() {
   const navigate = useNavigate()
@@ -51,6 +60,7 @@ function Login() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(form),
+        credentials: "include",
       })
 
       let result = null
@@ -65,7 +75,9 @@ function Login() {
       }
 
       if (result?.token) {
-        localStorage.setItem("token", result.token)
+        // Token is also sent as a cookie by the backend named 'myDigitalToken'
+        // If the backend doesn't set it via Set-Cookie header automatically, 
+        // we might still need to set it manually here, but the instruction says it's sent back.
       }
 
       const remainingDelay = Math.max(0, 1000 - (Date.now() - requestStartTime))
@@ -98,72 +110,73 @@ function Login() {
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-gradient-to-b from-slate-50 to-slate-100 px-4">
-      <div className="w-full max-w-sm space-y-5 rounded-2xl border border-border/60 bg-card p-7 shadow-lg">
-        <div className="space-y-2">
-          <h1 className="text-2xl font-bold tracking-tight">Welcome back</h1>
-          <p className="text-sm text-muted-foreground">Sign in to continue to your account.</p>
-        </div>
+      <Card className="w-full max-w-sm shadow-lg">
+        <CardHeader>
+          <CardTitle className="text-2xl">Welcome back</CardTitle>
+          <CardDescription>Sign in to continue to your account.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form className="space-y-4" onSubmit={handleSubmit}>
+            <div className="space-y-1">
+              <label className="text-sm font-medium" htmlFor="email">
+                Email
+              </label>
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                placeholder="guest@example.com"
+                value={form.email}
+                onChange={handleChange}
+                required
+              />
+            </div>
 
-        <form className="space-y-4" onSubmit={handleSubmit}>
-          <div className="space-y-1">
-            <label className="text-sm font-medium" htmlFor="email">
-              Email
-            </label>
-            <Input
-              id="email"
-              name="email"
-              type="email"
-              placeholder="guest@example.com"
-              value={form.email}
-              onChange={handleChange}
-              required
-            />
-          </div>
+            <div className="space-y-1">
+              <label className="text-sm font-medium" htmlFor="password">
+                Password
+              </label>
+              <Input
+                id="password"
+                name="password"
+                type="password"
+                placeholder="••••••••"
+                value={form.password}
+                onChange={handleChange}
+                required
+              />
+            </div>
 
-          <div className="space-y-1">
-            <label className="text-sm font-medium" htmlFor="password">
-              Password
-            </label>
-            <Input
-              id="password"
-              name="password"
-              type="password"
-              placeholder="••••••••"
-              value={form.password}
-              onChange={handleChange}
-              required
-            />
-          </div>
+            <Button className="w-full font-medium shadow-sm" type="submit" disabled={isSubmitting}>
+              {isSubmitting ? (
+                <span className="inline-flex items-center gap-2">
+                  <span
+                    className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"
+                    aria-hidden="true"
+                  />
+                  Signing in...
+                </span>
+              ) : (
+                "Sign in"
+              )}
+            </Button>
 
-          <Button className="w-full font-medium shadow-sm" type="submit" disabled={isSubmitting}>
-            {isSubmitting ? (
-              <span className="inline-flex items-center gap-2">
-                <span
-                  className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"
-                  aria-hidden="true"
-                />
-                Signing in...
-              </span>
-            ) : (
-              "Sign in"
+            <Button asChild className="w-full font-medium" type="button" variant="secondary" disabled={isSubmitting}>
+              <Link to="/register">Register</Link>
+            </Button>
+
+            {submitFeedback.message && (
+              <p
+                className={`text-center text-sm ${submitFeedback.type === "success" ? "text-green-600" : "text-destructive"}`}
+                role="status"
+                aria-live="polite"
+              >
+                {submitFeedback.message}
+              </p>
             )}
-          </Button>
-
-          <Button asChild className="w-full font-medium" type="button" variant="secondary" disabled={isSubmitting}>
-            <Link to="/register">Register</Link>
-          </Button>
-
-          {submitFeedback.message && (
-            <p
-              className={`text-center text-sm ${submitFeedback.type === "success" ? "text-green-600" : "text-destructive"}`}
-              role="status"
-              aria-live="polite"
-            >
-              {submitFeedback.message}
-            </p>
-          )}
-        </form>
-      </div>
+          </form>
+        </CardContent>
+      </Card>
     </main>
   )
 }

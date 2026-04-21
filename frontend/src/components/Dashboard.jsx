@@ -1,8 +1,17 @@
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import axios from "axios"
+import Cookies from "js-cookie"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import { Loader2, LogOut, Copy, Upload, Image as ImageIcon } from "lucide-react"
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? ""
@@ -18,50 +27,51 @@ function Dashboard() {
   const [copiedId, setCopiedId] = useState(null)
 
   useEffect(() => {
-    const token = localStorage.getItem("token")
-    if (!token) {
-      navigate("/login")
-      return
-    }
     fetchImages()
   }, [navigate])
 
   const fetchImages = async () => {
     setIsLoading(true)
-    const token = localStorage.getItem("token")
     try {
       const response = await axios.get(`${API_BASE_URL}/api/images/getAll`, {
-        headers: { Authorization: `Bearer ${token}` },
+        withCredentials: true,
       })
       console.log("response:", response.data)
       console.log("total images:", response.data.images.length)
       setImages(response.data.images)
     } catch (error) {
       console.error("Failed to fetch images", error)
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        navigate("/login")
+      }
     } finally {
       setIsLoading(false)
     }
   }
 
-  const handleLogout = () => {
-    localStorage.removeItem("token")
-    navigate("/login")
+  const handleLogout = async () => {
+    try {
+      await axios.post(`${API_BASE_URL}/api/auth/logout`, {}, { withCredentials: true })
+    } catch (error) {
+      console.error("Logout failed", error)
+    } finally {
+      Cookies.remove("myDigitalToken") // Keep as fallback for non-httpOnly if any
+      navigate("/login")
+    }
   }
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0]
     if (!selectedFile) return
-
-    if (!selectedFile.type.startsWith("image/")) {
+    const allowedFileTypes = ["image/jpeg", "image/png", "application/zip", "application/x-zip-compressed"]
+    if (!allowedFileTypes.includes(selectedFile.type)) {
       setUploadFeedback({ type: "error", message: "This is not an image file. Please choose an image file." })
       setFile(null)
       setPreviewUrl(null)
       return
     }
-
     setFile(selectedFile)
-    const url = URL.createObjectURL(selectedFile)
-    setPreviewUrl(url)
+    setPreviewUrl(selectedFile.type === "application/zip" || selectedFile.type === "application/x-zip-compressed" ? null : URL.createObjectURL(selectedFile))
     setUploadFeedback({ type: "", message: "" })
   }
 
@@ -75,11 +85,10 @@ function Dashboard() {
     const formData = new FormData()
     formData.append("image", file)
 
-    const token = localStorage.getItem("token")
     try {
       await axios.post(`${API_BASE_URL}/api/images/upload`, formData, {
+        withCredentials: true,
         headers: {
-          Authorization: `Bearer ${token}`,
           "Content-Type": "multipart/form-data",
         },
       })
@@ -124,79 +133,84 @@ function Dashboard() {
 
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         {/* Upload Section */}
-        <section className="mb-12 rounded-2xl border border-border/60 bg-white p-6 shadow-sm">
-          <h2 className="mb-4 text-xl font-semibold text-slate-900">Upload New Image</h2>
-          <form onSubmit={handleUpload} className="flex flex-col gap-4 sm:flex-row sm:items-end">
-            <div className="flex-1 space-y-1">
-              <label className="text-sm font-medium text-slate-700" htmlFor="image">
-                Choose an image file
-              </label>
-              <Input
-                id="image"
-                type="file"
-                accept="image/*"
-                onChange={handleFileChange}
-                className="cursor-pointer file:mr-4 file:cursor-pointer file:rounded-md file:border-0 file:bg-primary/10 file:px-3 file:py-1 file:text-xs file:font-semibold file:text-primary hover:file:bg-primary/20"
-                required
-              />
-            </div>
-            <Button type="submit" disabled={isUploading || !file} className="min-w-[120px] shadow-sm">
-              {isUploading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Uploading...
-                </>
-              ) : (
-                <>
-                  <Upload className="mr-2 h-4 w-4" />
-                  Upload
-                </>
-              )}
-            </Button>
-          </form>
-
-          {previewUrl && (
-            <div className="mt-6 space-y-2">
-              <p className="text-sm font-medium text-slate-700">Image Preview</p>
-              <div className="relative w-full max-w-xs overflow-hidden rounded-lg border border-border bg-slate-50 sm:max-w-sm" style={{ aspectRatio: '16/9' }}>
-                <img
-                  src={previewUrl}
-                  alt="Preview"
-                  className="h-full w-full object-contain"
+        <Card className="mb-12">
+          <CardHeader>
+            <CardTitle>Upload New Image</CardTitle>
+            <CardDescription></CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleUpload} className="flex flex-col gap-4 sm:flex-row sm:items-end">
+              <div className="flex-1 space-y-1">
+                <label className="text-sm font-medium text-slate-700" htmlFor="image">
+                  Choose your image file
+                </label>
+                <Input
+                  id="image"
+                  type="file"
+                  accept="image/*,application/zip,application/x-zip-compressed"
+                  onChange={handleFileChange}
+                  className="cursor-pointer file:mr-4 file:cursor-pointer file:rounded-md file:border-0 file:bg-primary/10 file:px-3 file:py-1 file:text-xs file:font-semibold file:text-primary hover:file:bg-primary/20"
+                  required
                 />
-                <Button
-                  type="button"
-                  variant="destructive"
-                  size="icon"
-                  className="absolute top-2 right-2 h-8 w-8 rounded-full shadow-md"
-                  onClick={() => {
-                    setFile(null)
-                    setPreviewUrl(null)
-                    document.getElementById("image").value = ""
-                  }}
-                >
-                  <span className="sr-only">Remove image</span>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth={2}
-                    stroke="currentColor"
-                    className="h-4 w-4"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </Button>
               </div>
-            </div>
-          )}
+              <Button type="submit" disabled={isUploading || !file} className="min-w-[120px] shadow-sm">
+                {isUploading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Uploading...
+                  </>
+                ) : (
+                  <>
+                    <Upload className="mr-2 h-4 w-4" />
+                    Upload
+                  </>
+                )}
+              </Button>
+            </form>
 
-          {uploadFeedback.message && (
-            <p className={`mt-3 text-sm ${uploadFeedback.type === "success" ? "text-green-600" : "text-destructive"}`}>
-              {uploadFeedback.message}
-            </p>
-          )}
-        </section>
+            {previewUrl && (
+              <div className="mt-6 space-y-2">
+                <p className="text-sm font-medium text-slate-700">Image Preview</p>
+                <div className="relative h-32 w-32 overflow-hidden rounded-lg border border-border bg-slate-50">
+                  <img
+                    src={previewUrl}
+                    alt="Preview"
+                    className="h-full w-full object-cover"
+                  />
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="icon"
+                    className="absolute top-2 right-2 h-8 w-8 rounded-full shadow-md"
+                    onClick={() => {
+                      setFile(null)
+                      setPreviewUrl(null)
+                      document.getElementById("image").value = ""
+                    }}
+                  >
+                    <span className="sr-only">Remove image</span>
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth={2}
+                      stroke="currentColor"
+                      className="h-4 w-4"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {uploadFeedback.message && (
+              <p className={`mt-3 text-sm ${uploadFeedback.type === "success" ? "text-green-600" : "text-destructive"}`}>
+                {uploadFeedback.message}
+              </p>
+            )}
+          </CardContent>
+        </Card>
 
         <section>
           <h2 className="mb-6 text-xl font-semibold text-slate-900">Your Gallery</h2>
@@ -206,31 +220,31 @@ function Dashboard() {
               <p>Fetching your images...</p>
             </div>
           ) : images.length > 0 ? (
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <div className="flex flex-wrap gap-6">
               {images.map((img) => (
-                <div key={img._id} className="group overflow-hidden rounded-xl border border-border/60 bg-white shadow-sm transition-all hover:shadow-md">
-                  <div className="relative aspect-square overflow-hidden bg-slate-100">
+                <Card key={img.id} className="group overflow-hidden transition-all hover:shadow-md py-0">
+                  <div className="relative h-32 w-32 flex-shrink-0 overflow-hidden bg-slate-100">
                     <img
-                      src={img.image_url}
+                      src={img.thumb64}
                       alt={img.filename}
                       className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                     />
                   </div>
-                  <div className="p-4">
+                  <CardContent className="w-32 p-4 pt-0">
                     <p className="mb-3 truncate text-sm font-medium text-slate-700" title={img.filename}>
-                      {img.public_id}
+                      {img.image_name}
                     </p>
                     <Button
                       variant="outline"
                       size="sm"
                       className="w-full text-xs font-medium"
-                      onClick={() => copyToClipboard(img.image_url, img.id)}
+                      onClick={() => copyToClipboard(img.original_url, img.id)}
                     >
                       <Copy className="mr-2 h-3.5 w-3.5" />
                       Copy Link
                     </Button>
-                  </div>
-                </div>
+                  </CardContent>
+                </Card>
               ))}
             </div>
           ) : (
