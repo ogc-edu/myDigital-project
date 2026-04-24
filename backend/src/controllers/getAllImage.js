@@ -26,7 +26,6 @@ const getAuthenticateUrl = async (req, res, next) => {
                 type: 'authenticated',
                 sign_url: true,
                 secure: true,
-                expires_at: Date.now() + 3600,
             };
 
             let thumbnails = {};
@@ -34,20 +33,23 @@ const getAuthenticateUrl = async (req, res, next) => {
             if(img.image_width >= 128 && img.image_length >= 128){
                 thumbnails.thumb32 = cloudinary.url(img.public_id, {
                     ...baseConfig,
+                    format: img.image_type,
                     transformation: [{ width: 32, crop: 'scale'}]
                 });
                 thumbnails.thumb64 = cloudinary.url(img.public_id, {
                     ...baseConfig,
+                    format: img.image_type,
                     transformation: [{ width: 64, crop: 'scale' }]
                 });
             } else{
-                const originalUrl = cloudinary.url(img.public_id, baseConfig);
+                const originalUrl = cloudinary.url(img.public_id, { ...baseConfig, format: img.image_type });
                 thumbnails.thumb32 = originalUrl;
                 thumbnails.thumb64 = originalUrl;
             }
             return {
                 id: img.id,
-                original_url: cloudinary.url(img.public_id, baseConfig),        //return full size id
+                image_name: img.image_name,
+                original_url: cloudinary.url(img.public_id, { ...baseConfig, format: img.image_type }),        //return full size id
                 ...thumbnails,
             };
         })

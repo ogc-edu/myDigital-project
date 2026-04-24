@@ -6,17 +6,17 @@ import Image from './models/Image.js';
 
 dotenv.config({ override: true });
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT;
 
 const startServer = async () => {
   try {
     await sequelize.sync({ force: false });
-    console.log('🚀 Database connected and tables synced');
+    console.log('Database online');
 
     await app.listen(PORT);
-    console.log(`Server listening on port ${PORT}`);
+    console.log(`Backend on port ${PORT}`);
   } catch (error) {
-    console.error('Failed to start server:', error);
+    console.error('Server dead, error:', error);
     process.exit(1);
   }
 }

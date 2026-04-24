@@ -1,7 +1,7 @@
 import { Sequelize } from 'sequelize';
 import dotenv from 'dotenv';
 
-dotenv.config({ override: true });
+dotenv.config({ override: true });    //overriding var in system
 
 const sequelize = new Sequelize(
   process.env.DB_NAME,

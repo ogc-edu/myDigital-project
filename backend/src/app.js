@@ -36,4 +36,4 @@ export default app;
 /api/login
 /api/images/upload
 / -> postman health check
- */
+*/

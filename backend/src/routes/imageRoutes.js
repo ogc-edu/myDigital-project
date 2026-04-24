@@ -3,7 +3,7 @@ import { verifyToken } from '../middleware/verifyToken.js';
 import { imageFilter } from '../middleware/uploadMiddleware.js';
 import { uploadImage } from '../controllers/uploadImageController.js';
 import { cloudinaryErrorHandler } from '../middleware/errorHandler.js';
-import  {getAllImage, getAuthenticateUrl}  from '../controllers/getAllImage.js';
+import { getAuthenticateUrl}  from '../controllers/getAllImage.js';
 
 const router = express.Router();
 

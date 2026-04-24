@@ -25,7 +25,7 @@ const loginController = async (req, res, next) => {
       httpOnly: true,
       secure: false,
       sameSite: 'strict',
-      maxAge: 3600000 // 1 hour
+      maxAge: 3600000 //1 hour
     });
 
     return res.status(200).json({ 

@@ -48,6 +48,13 @@ export const uploadImage = async(req, res, next) => {
       //filter for image files
       const imageEntries = entries.filter(entry => !entry.directory && entry.filename.match(/\.(jpg|jpeg|png)$/i));
 
+      // if (imageEntries.length === 0) {
+      //   return res.status(400).json({
+      //     error: 'Invalid ZIP content',
+      //     message: 'No image files found in ZIP uploaded'
+      //   });
+      // }
+
       for (const entry of imageEntries) {
         const imageData = await entry.getData(new zip.Uint8ArrayWriter());
         const result = await streamUpload(imageData, req, entry.filename);
